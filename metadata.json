@@ -1,0 +1,6 @@
+{
+  "name": "Roda Pusingan Kata Kerja 3D",
+  "description": "Permainan pendidikan 3D interaktif Bahasa Melayu Tahap 1: Pengembaraan Teka Gambar dengan roda 3D, maskot burung hantu, audio dan gamifikasi.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

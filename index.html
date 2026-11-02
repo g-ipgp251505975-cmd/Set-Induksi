@@ -1,0 +1,2522 @@
+<!doctype html>
+<html lang="ms">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Roda Pusingan Kata Kerja 3D – Tahap 1: Pengembaraan Teka Gambar</title>
+    <meta name="description" content="Permainan pendidikan 3D interaktif Bahasa Melayu Tahap 1: Pengembaraan Teka Gambar dengan roda 3D, maskot burung hantu, audio dan gamifikasi." />
+    <meta property="og:title" content="Roda Pusingan Kata Kerja 3D – Tahap 1: Pengembaraan Teka Gambar" />
+    <meta property="og:description" content="Permainan pendidikan 3D interaktif Bahasa Melayu Tahap 1: Pengembaraan Teka Gambar dengan roda 3D, maskot burung hantu, audio dan gamifikasi." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <style>
+      /* ==========================================================================
+         GAYA VISUAL 3D, TEMA KANAK-KANAK & SUSUN ATUR RESPONSIP
+         ========================================================================== */
+      :root {
+        --sky-top: #38bdf8;
+        --sky-mid: #7dd3fc;
+        --sky-bottom: #e0f2fe;
+        --grass-top: #86efac;
+        --grass-mid: #4ade80;
+        --grass-bottom: #22c55e;
+        --wood-gold: #f59e0b;
+        --card-bg: #ffffff;
+        --text-dark: #1e293b;
+        --text-muted: #64748b;
+        --primary: #4f46e5;
+        --primary-hover: #4338ca;
+        --accent-yellow: #facc15;
+        --accent-orange: #fb923c;
+        --accent-green: #10b981;
+        --accent-red: #ef4444;
+        --shadow-3d: 0 10px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.15);
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      body {
+        font-family: 'Comic Sans MS', 'Chalkboard SE', 'Fredoka', 'Nunito', system-ui, -apple-system, sans-serif;
+        background: radial-gradient(circle at 50% 30%, var(--sky-mid) 0%, var(--sky-top) 50%, #0284c7 100%);
+        color: var(--text-dark);
+        min-height: 100vh;
+        overflow-x: hidden;
+        overflow-y: auto;
+        position: relative;
+        perspective: 1200px;
+      }
+
+      /* Kawasan Latar Belakang 3D & Awan */
+      .world-bg {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 0;
+        overflow: hidden;
+      }
+
+      .sun-3d {
+        position: absolute;
+        top: 30px;
+        right: 8%;
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: radial-gradient(circle, #fef08a 0%, #facc15 65%, #f59e0b 100%);
+        box-shadow: 0 0 50px #facc15, 0 0 100px rgba(250, 204, 21, 0.5);
+        animation: sunGlow 6s ease-in-out infinite alternate;
+      }
+
+      @keyframes sunGlow {
+        from { transform: scale(1); filter: brightness(1); }
+        to { transform: scale(1.08); filter: brightness(1.15); }
+      }
+
+      .cloud {
+        position: absolute;
+        background: rgba(255, 255, 255, 0.85);
+        border-radius: 50px;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+      }
+      .cloud::before, .cloud::after {
+        content: '';
+        position: absolute;
+        background: inherit;
+        border-radius: 50%;
+      }
+      .cloud-1 {
+        top: 80px;
+        left: 5%;
+        width: 160px;
+        height: 50px;
+        animation: floatCloud1 28s linear infinite;
+      }
+      .cloud-1::before { width: 70px; height: 70px; top: -35px; left: 25px; }
+      .cloud-1::after { width: 55px; height: 55px; top: -25px; left: 80px; }
+
+      .cloud-2 {
+        top: 140px;
+        right: 20%;
+        width: 200px;
+        height: 60px;
+        animation: floatCloud2 36s linear infinite;
+      }
+      .cloud-2::before { width: 90px; height: 90px; top: -45px; left: 30px; }
+      .cloud-2::after { width: 65px; height: 65px; top: -30px; left: 105px; }
+
+      @keyframes floatCloud1 {
+        0% { transform: translateX(-120px); }
+        100% { transform: translateX(calc(100vw + 120px)); }
+      }
+      @keyframes floatCloud2 {
+        0% { transform: translateX(100px); }
+        100% { transform: translateX(calc(-100vw - 120px)); }
+      }
+
+      /* Pentas & Lantai 3D */
+      .stage-floor {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 38vh;
+        background: linear-gradient(180deg, var(--grass-top) 0%, var(--grass-mid) 40%, var(--grass-bottom) 100%);
+        transform-origin: bottom center;
+        box-shadow: inset 0 25px 50px rgba(0, 0, 0, 0.15);
+        z-index: 1;
+      }
+      .stage-floor::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background-image: radial-gradient(circle, rgba(255, 255, 255, 0.25) 2px, transparent 2px);
+        background-size: 32px 32px;
+        opacity: 0.6;
+      }
+
+      /* Bekas Utama Permainan */
+      .game-container {
+        position: relative;
+        z-index: 10;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 12px 16px;
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      /* ==========================================================================
+         PAPAN STATUS & HUD (PINTAR, JELAS, TAHAP 1)
+         ========================================================================== */
+      .hud-header {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 12px 18px;
+        background: rgba(255, 255, 255, 0.94);
+        border: 4px solid #fef08a;
+        border-radius: 24px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15), 0 4px 0 #ca8a04;
+        margin-bottom: 12px;
+      }
+
+      .game-title-badge {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .game-title-badge h1 {
+        font-size: 1.25rem;
+        font-weight: 900;
+        color: #1e1b4b;
+        letter-spacing: -0.02em;
+        text-shadow: 1px 1px 0 #e0e7ff;
+      }
+      .tag-stage1 {
+        background: #f43f5e;
+        color: #ffffff;
+        font-size: 0.75rem;
+        font-weight: 800;
+        padding: 4px 10px;
+        border-radius: 9999px;
+        box-shadow: 0 2px 4px rgba(244, 63, 94, 0.4);
+      }
+
+      .stats-clusters {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      .stat-pill {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        background: #f1f5f9;
+        padding: 6px 14px;
+        border-radius: 16px;
+        border: 2px solid #cbd5e1;
+        font-weight: 800;
+        font-size: 0.95rem;
+        box-shadow: 0 3px 0 #94a3b8;
+      }
+      .stat-pill.score-pill {
+        background: #eff6ff;
+        border-color: #93c5fd;
+        color: #1d4ed8;
+        box-shadow: 0 3px 0 #60a5fa;
+      }
+      .stat-pill.star-pill {
+        background: #fefce8;
+        border-color: #fde047;
+        color: #a16207;
+        box-shadow: 0 3px 0 #eab308;
+      }
+      .stat-pill.progress-pill {
+        background: #f0fdf4;
+        border-color: #86efac;
+        color: #15803d;
+        box-shadow: 0 3px 0 #4ade80;
+      }
+      .stat-pill.badge-pill {
+        background: #faf5ff;
+        border-color: #d8b4fe;
+        color: #6b21a8;
+        box-shadow: 0 3px 0 #c084fc;
+      }
+
+      .hud-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .icon-btn {
+        background: #ffffff;
+        border: 3px solid #e2e8f0;
+        color: #334155;
+        border-radius: 14px;
+        padding: 6px 10px;
+        font-size: 1.1rem;
+        cursor: pointer;
+        font-weight: 700;
+        box-shadow: 0 3px 0 #cbd5e1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.1s, box-shadow 0.1s;
+      }
+      .icon-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 0 #94a3b8;
+        background: #f8fafc;
+      }
+      .icon-btn:active {
+        transform: translateY(2px);
+        box-shadow: 0 1px 0 #cbd5e1;
+      }
+
+      /* ==========================================================================
+         ZON PENTAS 3D TENGAH (RODA + MASKOT + PODIUM)
+         ========================================================================== */
+      .main-stage-arena {
+        position: relative;
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px 0;
+        min-height: 480px;
+      }
+
+      /* Tapak Podium 3D */
+      .podium-base-3d {
+        position: absolute;
+        bottom: 15px;
+        width: 380px;
+        height: 70px;
+        background: linear-gradient(180deg, #fde047 0%, #eab308 50%, #ca8a04 100%);
+        border-radius: 50%;
+        box-shadow: 0 25px 40px rgba(0, 0, 0, 0.4), inset 0 4px 8px rgba(255, 255, 255, 0.6);
+        transform: rotateX(60deg);
+        z-index: 2;
+      }
+      .podium-pillar {
+        position: absolute;
+        bottom: 30px;
+        width: 140px;
+        height: 90px;
+        background: linear-gradient(90deg, #ca8a04 0%, #fde047 50%, #ca8a04 100%);
+        border-radius: 20px;
+        box-shadow: 0 15px 25px rgba(0, 0, 0, 0.3);
+        z-index: 2;
+      }
+
+      /* Bekas Roda 3D */
+      .wheel-assembly-3d {
+        position: relative;
+        width: 360px;
+        height: 360px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 5;
+        transform-style: preserve-3d;
+        filter: drop-shadow(0 20px 30px rgba(0, 0, 0, 0.35));
+      }
+
+      /* Bingkai Luar Rim 3D Tebal */
+      .wheel-rim-outer {
+        position: absolute;
+        width: 360px;
+        height: 360px;
+        border-radius: 50%;
+        background: conic-gradient(
+          #d97706, #fbbf24, #f59e0b, #b45309,
+          #d97706, #fbbf24, #f59e0b, #b45309
+        );
+        box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.5), 0 12px 25px rgba(0, 0, 0, 0.4);
+        padding: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .wheel-canvas {
+        width: 336px;
+        height: 336px;
+        border-radius: 50%;
+        cursor: pointer;
+        display: block;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+      }
+
+      /* Anak Panah Penunjuk 3D di Bahagian Atas */
+      .wheel-pointer-3d {
+        position: absolute;
+        top: -24px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 20;
+        width: 44px;
+        height: 52px;
+        filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.35));
+        transition: transform 0.08s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      }
+      .wheel-pointer-3d.tick {
+        transform: translateX(-50%) rotate(-18deg);
+      }
+      .wheel-pointer-3d svg {
+        width: 100%;
+        height: 100%;
+      }
+
+      /* Cap Pusat Emas 3D */
+      .wheel-center-hub {
+        position: absolute;
+        width: 76px;
+        height: 76px;
+        border-radius: 50%;
+        background: radial-gradient(circle at 35% 35%, #ffffff 0%, #fde047 30%, #eab308 70%, #92400e 100%);
+        border: 4px solid #fff;
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.4), inset 0 2px 4px rgba(255, 255, 255, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        z-index: 10;
+        pointer-events: none;
+      }
+
+      /* ==========================================================================
+         MASKOT BURUNG HANTU 3D 🦉 ("SI PINTAR")
+         ========================================================================== */
+      .mascot-companion {
+        position: absolute;
+        right: 4%;
+        bottom: 30px;
+        z-index: 15;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        pointer-events: none;
+      }
+
+      .mascot-speech-bubble {
+        background: #ffffff;
+        color: #1e293b;
+        font-weight: 800;
+        font-size: 1rem;
+        padding: 8px 16px;
+        border-radius: 18px;
+        border: 3px solid #3b82f6;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+        margin-bottom: 8px;
+        position: relative;
+        white-space: nowrap;
+        animation: bubblePop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      }
+      .mascot-speech-bubble::after {
+        content: '';
+        position: absolute;
+        bottom: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+        border-width: 10px 10px 0;
+        border-style: solid;
+        border-color: #3b82f6 transparent;
+        display: block;
+        width: 0;
+      }
+
+      .owl-mascot-svg-wrap {
+        width: 130px;
+        height: 150px;
+        filter: drop-shadow(0 12px 18px rgba(0, 0, 0, 0.3));
+        transform-origin: bottom center;
+        animation: owlIdle 3.5s ease-in-out infinite;
+      }
+
+      @keyframes owlIdle {
+        0%, 100% { transform: translateY(0) rotate(0deg); }
+        50% { transform: translateY(-8px) rotate(2deg); }
+      }
+      @keyframes owlJump {
+        0% { transform: scale(1, 1) translateY(0); }
+        30% { transform: scale(1.15, 0.85) translateY(0); }
+        60% { transform: scale(0.9, 1.1) translateY(-35px) rotate(-5deg); }
+        80% { transform: scale(1.05, 0.95) translateY(-5px); }
+        100% { transform: scale(1, 1) translateY(0); }
+      }
+      @keyframes owlCheer {
+        0%, 100% { transform: rotate(0deg) scale(1); }
+        25% { transform: rotate(-8deg) scale(1.1) translateY(-15px); }
+        75% { transform: rotate(8deg) scale(1.1) translateY(-15px); }
+      }
+
+      .owl-mascot-svg-wrap.jumping {
+        animation: owlJump 0.8s ease-out;
+      }
+      .owl-mascot-svg-wrap.cheering {
+        animation: owlCheer 1.2s ease-in-out infinite;
+      }
+
+      /* ==========================================================================
+         KAD CABARAN TEKA GAMBAR 3D (TAMPIL DI TENGAH SKRIN)
+         ========================================================================== */
+      .challenge-modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.65);
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 100;
+        padding: 16px;
+        opacity: 0;
+        transition: opacity 0.25s ease;
+      }
+      .challenge-modal-overlay.active {
+        display: flex;
+        opacity: 1;
+      }
+
+      .challenge-card-3d {
+        background: #ffffff;
+        width: 100%;
+        max-width: 520px;
+        border-radius: 28px;
+        border: 6px solid #fde047;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4), 0 12px 0 #ca8a04;
+        padding: 24px;
+        text-align: center;
+        transform: scale(0.85) rotateX(15deg);
+        transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        position: relative;
+        overflow: hidden;
+      }
+      .challenge-modal-overlay.active .challenge-card-3d {
+        transform: scale(1) rotateX(0deg);
+      }
+
+      .challenge-card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 12px;
+      }
+      .round-indicator {
+        font-size: 0.95rem;
+        font-weight: 800;
+        color: #475569;
+        background: #f1f5f9;
+        padding: 4px 12px;
+        border-radius: 9999px;
+      }
+
+      /* Paparan Gambar / Emoji Besar */
+      .image-display-box {
+        width: 100%;
+        height: 180px;
+        background: radial-gradient(circle, #f8fafc 0%, #e2e8f0 100%);
+        border: 4px dashed #94a3b8;
+        border-radius: 22px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 10px 0 16px;
+        position: relative;
+        box-shadow: inset 0 4px 10px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+      }
+      .emoji-hero {
+        font-size: 6.5rem;
+        line-height: 1;
+        filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.2));
+        animation: emojiBounce 2.5s ease-in-out infinite;
+      }
+      @keyframes emojiBounce {
+        0%, 100% { transform: translateY(0) scale(1); }
+        50% { transform: translateY(-8px) scale(1.05); }
+      }
+
+      .custom-hero-img {
+        max-width: 90%;
+        max-height: 90%;
+        object-fit: contain;
+        border-radius: 14px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      }
+
+      .question-prompt {
+        font-size: 1.25rem;
+        font-weight: 900;
+        color: #0f172a;
+        margin-bottom: 12px;
+      }
+
+      /* Butang Bantuan Percuma */
+      .help-buttons-row {
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+      .help-btn {
+        background: #f0fdf4;
+        border: 2px solid #86efac;
+        color: #166534;
+        font-weight: 800;
+        font-size: 0.9rem;
+        padding: 8px 16px;
+        border-radius: 16px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        box-shadow: 0 3px 0 #4ade80;
+        transition: transform 0.1s, box-shadow 0.1s;
+      }
+      .help-btn:hover {
+        background: #dcfce7;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 0 #22c55e;
+      }
+      .help-btn:active {
+        transform: translateY(2px);
+        box-shadow: 0 1px 0 #4ade80;
+      }
+
+      .hint-box {
+        background: #fefce8;
+        border: 2px dashed #facc15;
+        color: #854d0e;
+        font-weight: 800;
+        padding: 8px 12px;
+        border-radius: 14px;
+        margin-bottom: 14px;
+        font-size: 1rem;
+        display: none;
+      }
+
+      /* 3 Pilihan Jawapan */
+      .answer-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+
+      .answer-btn {
+        background: #ffffff;
+        border: 3px solid #cbd5e1;
+        border-radius: 18px;
+        padding: 14px 18px;
+        font-size: 1.25rem;
+        font-weight: 800;
+        color: #1e293b;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        box-shadow: 0 5px 0 #94a3b8;
+        transition: transform 0.1s, box-shadow 0.1s, border-color 0.2s, background 0.2s;
+      }
+      .answer-btn:hover:not(:disabled) {
+        border-color: #3b82f6;
+        background: #eff6ff;
+        transform: translateY(-2px);
+        box-shadow: 0 7px 0 #60a5fa;
+      }
+      .answer-btn:active:not(:disabled) {
+        transform: translateY(3px);
+        box-shadow: 0 2px 0 #94a3b8;
+      }
+      .answer-btn:focus-visible {
+        outline: 4px solid #facc15;
+      }
+
+      .btn-num-tag {
+        background: #e2e8f0;
+        color: #475569;
+        font-size: 0.85rem;
+        font-weight: 900;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .answer-btn.correct {
+        background: #dcfce7 !important;
+        border-color: #22c55e !important;
+        color: #15803d !important;
+        box-shadow: 0 5px 0 #16a34a !important;
+      }
+      .answer-btn.wrong {
+        background: #fee2e2 !important;
+        border-color: #ef4444 !important;
+        color: #b91c1c !important;
+        box-shadow: 0 5px 0 #dc2626 !important;
+        animation: shakeBtn 0.4s ease;
+      }
+      .answer-btn.eliminated {
+        opacity: 0.35;
+        pointer-events: none;
+        text-decoration: line-through;
+        transform: scale(0.95);
+      }
+
+      @keyframes shakeBtn {
+        0%, 100% { transform: translateX(0); }
+        20%, 60% { transform: translateX(-8px); }
+        40%, 80% { transform: translateX(8px); }
+      }
+
+      /* Maklum Balas Jawapan */
+      .feedback-box {
+        margin-top: 10px;
+        padding: 12px 16px;
+        border-radius: 16px;
+        font-weight: 800;
+        display: none;
+        animation: fadeIn 0.25s ease;
+      }
+      .feedback-box.correct {
+        background: #f0fdf4;
+        border: 2px solid #86efac;
+        color: #166534;
+        display: block;
+      }
+      .feedback-box.try-again {
+        background: #fffbeb;
+        border: 2px solid #fde047;
+        color: #b45309;
+        display: block;
+      }
+
+      .example-sentence-highlight {
+        font-size: 1.1rem;
+        margin-top: 6px;
+        color: #0f172a;
+      }
+      .example-sentence-highlight strong {
+        color: #16a34a;
+        text-decoration: underline;
+      }
+
+      .next-turn-btn {
+        margin-top: 14px;
+        width: 100%;
+        background: linear-gradient(180deg, #22c55e 0%, #16a34a 100%);
+        color: #ffffff;
+        font-size: 1.3rem;
+        font-weight: 900;
+        padding: 14px 24px;
+        border-radius: 18px;
+        border: none;
+        box-shadow: 0 6px 0 #15803d, 0 12px 20px rgba(22, 163, 74, 0.4);
+        cursor: pointer;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: transform 0.1s, box-shadow 0.1s;
+      }
+      .next-turn-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 0 #15803d;
+      }
+      .next-turn-btn:active {
+        transform: translateY(3px);
+        box-shadow: 0 3px 0 #15803d;
+      }
+
+      /* ==========================================================================
+         BUTANG KAWALAN BESAR (BAHAGIAN BAWAH)
+         ========================================================================== */
+      .bottom-control-bar {
+        position: relative;
+        z-index: 20;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+        padding: 8px 0 16px;
+      }
+
+      .btn-spin-3d {
+        background: linear-gradient(180deg, #ff0055 0%, #e11d48 50%, #be123c 100%);
+        color: #ffffff;
+        font-size: 2rem;
+        font-weight: 900;
+        letter-spacing: 0.05em;
+        padding: 18px 56px;
+        border-radius: 28px;
+        border: 4px solid #fecdd3;
+        box-shadow: 0 10px 0 #881337, 0 20px 30px rgba(225, 29, 72, 0.45);
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 14px;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        transition: transform 0.1s, box-shadow 0.1s;
+      }
+      .btn-spin-3d:hover:not(:disabled) {
+        transform: translateY(-3px) scale(1.02);
+        box-shadow: 0 13px 0 #881337, 0 25px 35px rgba(225, 29, 72, 0.5);
+      }
+      .btn-spin-3d:active:not(:disabled) {
+        transform: translateY(5px);
+        box-shadow: 0 4px 0 #881337;
+      }
+      .btn-spin-3d:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        filter: grayscale(0.4);
+      }
+
+      .keyboard-hint {
+        color: #ffffff;
+        font-size: 0.85rem;
+        font-weight: 700;
+        background: rgba(15, 23, 42, 0.5);
+        padding: 4px 14px;
+        border-radius: 9999px;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+      }
+
+      /* ==========================================================================
+         LENCANA PENCAPAIAN POPUP
+         ========================================================================== */
+      .badge-modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.75);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 150;
+        padding: 16px;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+      .badge-modal-overlay.active {
+        display: flex;
+        opacity: 1;
+      }
+      .badge-card {
+        background: #ffffff;
+        border-radius: 32px;
+        border: 8px solid #facc15;
+        padding: 32px 24px;
+        text-align: center;
+        max-width: 440px;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5), 0 12px 0 #ca8a04;
+        animation: badgePop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      }
+      @keyframes badgePop {
+        0% { transform: scale(0.6); opacity: 0; }
+        100% { transform: scale(1); opacity: 1; }
+      }
+      .badge-icon-large {
+        font-size: 5.5rem;
+        line-height: 1;
+        margin-bottom: 12px;
+        animation: trophyShine 2s infinite alternate;
+      }
+      @keyframes trophyShine {
+        from { transform: scale(1) rotate(-3deg); filter: drop-shadow(0 0 10px #facc15); }
+        to { transform: scale(1.1) rotate(3deg); filter: drop-shadow(0 0 25px #f59e0b); }
+      }
+      .badge-card h2 {
+        font-size: 1.8rem;
+        font-weight: 900;
+        color: #854d0e;
+        margin-bottom: 8px;
+      }
+      .badge-card p {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #334155;
+        margin-bottom: 20px;
+      }
+      .badge-dismiss-btn {
+        background: #eab308;
+        color: #ffffff;
+        font-size: 1.2rem;
+        font-weight: 900;
+        padding: 12px 32px;
+        border-radius: 20px;
+        border: none;
+        box-shadow: 0 6px 0 #a16207;
+        cursor: pointer;
+      }
+
+      /* ==========================================================================
+         SKRIN PENAMAT & RINGKASAN
+         ========================================================================== */
+      .summary-modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.8);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 120;
+        padding: 16px;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+      .summary-modal-overlay.active {
+        display: flex;
+        opacity: 1;
+      }
+      .summary-card {
+        background: #ffffff;
+        width: 100%;
+        max-width: 580px;
+        border-radius: 32px;
+        border: 8px solid #38bdf8;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5), 0 12px 0 #0284c7;
+        padding: 28px;
+        max-height: 90vh;
+        overflow-y: auto;
+      }
+      .summary-header {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+      .summary-header h2 {
+        font-size: 2rem;
+        font-weight: 900;
+        color: #0369a1;
+      }
+      .summary-header p {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #475569;
+      }
+
+      .summary-metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        margin-bottom: 20px;
+      }
+      .summary-metric-box {
+        background: #f8fafc;
+        border: 3px solid #e2e8f0;
+        border-radius: 20px;
+        padding: 14px;
+        text-align: center;
+      }
+      .summary-metric-box .label {
+        font-size: 0.85rem;
+        font-weight: 800;
+        color: #64748b;
+      }
+      .summary-metric-box .value {
+        font-size: 1.7rem;
+        font-weight: 900;
+        color: #0f172a;
+        margin-top: 4px;
+      }
+
+      .revision-box {
+        background: #fff7ed;
+        border: 2px dashed #fdba74;
+        border-radius: 20px;
+        padding: 16px;
+        margin-bottom: 24px;
+      }
+      .revision-box h3 {
+        font-size: 1.05rem;
+        font-weight: 900;
+        color: #c2410c;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .revision-list {
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        max-height: 160px;
+        overflow-y: auto;
+      }
+      .revision-item {
+        background: #ffffff;
+        padding: 8px 12px;
+        border-radius: 12px;
+        border: 1px solid #fed7aa;
+        font-size: 0.95rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .summary-actions-row {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .btn-play-again {
+        background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
+        color: #ffffff;
+        font-size: 1.25rem;
+        font-weight: 900;
+        padding: 14px;
+        border-radius: 20px;
+        border: none;
+        box-shadow: 0 6px 0 #1d4ed8;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+      .btn-view-all {
+        background: #f1f5f9;
+        color: #334155;
+        font-size: 1.05rem;
+        font-weight: 800;
+        padding: 12px;
+        border-radius: 18px;
+        border: 2px solid #cbd5e1;
+        cursor: pointer;
+      }
+
+      /* ==========================================================================
+         MODAL LIHAT SEMUA KATA KERJA
+         ========================================================================== */
+      .dictionary-modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.8);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 130;
+        padding: 16px;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+      .dictionary-modal-overlay.active {
+        display: flex;
+        opacity: 1;
+      }
+      .dictionary-card {
+        background: #ffffff;
+        width: 100%;
+        max-width: 700px;
+        border-radius: 32px;
+        border: 6px solid #6366f1;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4), 0 10px 0 #4338ca;
+        padding: 24px;
+        max-height: 88vh;
+        display: flex;
+        flex-direction: column;
+      }
+      .dictionary-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16px;
+      }
+      .dictionary-header h2 {
+        font-size: 1.5rem;
+        font-weight: 900;
+        color: #3730a3;
+      }
+      .dictionary-scroll {
+        overflow-y: auto;
+        padding-right: 6px;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 12px;
+      }
+      .dict-item-card {
+        background: #f8fafc;
+        border: 2px solid #e2e8f0;
+        border-radius: 18px;
+        padding: 12px;
+        display: flex;
+        gap: 12px;
+        align-items: center;
+      }
+      .dict-emoji {
+        font-size: 2.4rem;
+        background: #ffffff;
+        width: 60px;
+        height: 60px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+      }
+      .dict-details {
+        flex: 1;
+      }
+      .dict-verb {
+        font-size: 1.15rem;
+        font-weight: 900;
+        color: #1e293b;
+      }
+      .dict-sentence {
+        font-size: 0.85rem;
+        color: #64748b;
+        margin-top: 2px;
+      }
+      .dict-speak-btn {
+        background: #e0e7ff;
+        border: none;
+        color: #4338ca;
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+      }
+
+      /* Kanvas Zarah & Konfeti */
+      #confettiCanvas {
+        position: fixed;
+        inset: 0;
+        width: 100vw;
+        height: 100vh;
+        pointer-events: none;
+        z-index: 110;
+      }
+
+      /* Responsif */
+      @media (max-width: 640px) {
+        .game-title-badge h1 { font-size: 1rem; }
+        .hud-header { padding: 8px 12px; gap: 8px; border-radius: 18px; }
+        .stats-clusters { gap: 6px; }
+        .stat-pill { font-size: 0.85rem; padding: 4px 10px; border-radius: 12px; }
+        .wheel-assembly-3d { width: 290px; height: 290px; }
+        .wheel-rim-outer { width: 290px; height: 290px; padding: 10px; }
+        .wheel-canvas { width: 270px; height: 270px; }
+        .podium-base-3d { width: 300px; height: 60px; }
+        .btn-spin-3d { font-size: 1.5rem; padding: 14px 38px; }
+        .mascot-companion { right: 2%; bottom: 10px; }
+        .owl-mascot-svg-wrap { width: 90px; height: 110px; }
+        .mascot-speech-bubble { font-size: 0.85rem; padding: 6px 12px; }
+        .challenge-card-3d { padding: 18px; }
+        .image-display-box { height: 140px; }
+        .emoji-hero { font-size: 5rem; }
+        .answer-btn { font-size: 1.1rem; padding: 12px 14px; }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Latar Belakang Alam 3D -->
+    <div class="world-bg">
+      <div class="sun-3d" aria-hidden="true"></div>
+      <div class="cloud cloud-1" aria-hidden="true"></div>
+      <div class="cloud cloud-2" aria-hidden="true"></div>
+    </div>
+
+    <!-- Lantai Pentas Rumput 3D -->
+    <div class="stage-floor" aria-hidden="true"></div>
+
+    <!-- Kanvas Konfeti & Zarah 3D -->
+    <canvas id="confettiCanvas"></canvas>
+
+    <!-- Bekas Utama Permainan -->
+    <div class="game-container" id="app">
+      <!-- 1. Papan Status (HUD) -->
+      <header class="hud-header" role="banner">
+        <div class="game-title-badge">
+          <h1>🎡 Roda Kata Kerja 3D</h1>
+          <span class="tag-stage1">Tahap 1</span>
+        </div>
+
+        <div class="stats-clusters" aria-label="Statistik Permainan">
+          <div class="stat-pill score-pill" title="Jumlah Skor">
+            <span>🏆</span>
+            <span id="scoreText">0 Mata</span>
+          </div>
+          <div class="stat-pill star-pill" title="Jumlah Bintang">
+            <span>⭐</span>
+            <span id="starText">0</span>
+          </div>
+          <div class="stat-pill progress-pill" title="Kemajuan Kata Kerja">
+            <span>🎯</span>
+            <span id="progressText">0 / 12</span>
+          </div>
+          <div class="stat-pill badge-pill" id="badgePill" title="Status Lencana" style="display: none;">
+            <span>🏅</span>
+            <span>Pakar</span>
+          </div>
+        </div>
+
+        <div class="hud-actions">
+          <button class="icon-btn" id="audioToggleBtn" title="Audio Sebutan: Bahasa Melayu (ms-MY)" aria-label="Togol Bunyi Bahasa Melayu ms-MY">
+            🔊 <span style="font-size: 0.72rem; font-weight: 800; margin-left: 2px;">ms-MY</span>
+          </button>
+          <button class="icon-btn" id="viewAllBtn" title="Lihat Senarai Kata Kerja" aria-label="Lihat Kata Kerja">
+            📖
+          </button>
+          <button class="icon-btn" id="downloadHtmlBtn" title="Muat Turun Fail Offline index.html" aria-label="Muat Turun Fail">
+            💾
+          </button>
+        </div>
+      </header>
+
+      <!-- 2. Zon Pentas Utama 3D -->
+      <main class="main-stage-arena" id="mainStage">
+        <!-- Tapak Podium 3D -->
+        <div class="podium-base-3d" aria-hidden="true"></div>
+        <div class="podium-pillar" aria-hidden="true"></div>
+
+        <!-- Roda Pusingan 3D -->
+        <div class="wheel-assembly-3d" id="wheelAssembly">
+          <!-- Penunjuk 3D Atas -->
+          <div class="wheel-pointer-3d" id="wheelPointer" aria-hidden="true">
+            <svg viewBox="0 0 60 70">
+              <polygon points="30,70 10,15 50,15" fill="#ef4444" stroke="#991b1b" stroke-width="4" stroke-linejoin="round" />
+              <circle cx="30" cy="18" r="10" fill="#facc15" stroke="#b45309" stroke-width="3" />
+            </svg>
+          </div>
+
+          <!-- Rim Luar Berlapis 3D -->
+          <div class="wheel-rim-outer">
+            <!-- Kanvas Roda 12 Segmen -->
+            <canvas id="wheelCanvas" class="wheel-canvas" width="672" height="672" aria-label="Roda Pusingan 12 Segmen"></canvas>
+          </div>
+
+          <!-- Cap Pusat Emas 3D -->
+          <div class="wheel-center-hub" aria-hidden="true">✨</div>
+        </div>
+
+        <!-- Maskot Burung Hantu 🦉 ("Si Pintar") -->
+        <div class="mascot-companion" id="mascotCompanion">
+          <div class="mascot-speech-bubble" id="mascotBubble">Jom putar roda! 🎡</div>
+          <div class="owl-mascot-svg-wrap" id="owlMascot">
+            <!-- SVG Burung Hantu 3D Mesra Kanak-kanak -->
+            <svg viewBox="0 0 160 180" width="100%" height="100%">
+              <!-- Bayang Burung Hantu -->
+              <ellipse cx="80" cy="165" rx="55" ry="12" fill="rgba(0,0,0,0.25)" />
+              
+              <!-- Kaki Cakar -->
+              <ellipse cx="62" cy="155" rx="10" ry="6" fill="#f59e0b" />
+              <ellipse cx="98" cy="155" rx="10" ry="6" fill="#f59e0b" />
+
+              <!-- Badan Utama Burung Hantu -->
+              <ellipse cx="80" cy="98" rx="60" ry="62" fill="#8b5cf6" stroke="#6d28d9" stroke-width="4" />
+              
+              <!-- Perut Bulat Cerah -->
+              <ellipse cx="80" cy="108" rx="42" ry="44" fill="#ede9fe" />
+              <!-- Corak Bintik Dada -->
+              <path d="M 68 95 Q 73 100 78 95 M 82 95 Q 87 100 92 95 M 75 110 Q 80 115 85 110" fill="none" stroke="#a78bfa" stroke-width="3" stroke-linecap="round" />
+
+              <!-- Telinga / Jambul -->
+              <polygon points="35,46 22,15 58,32" fill="#7c3aed" stroke="#6d28d9" stroke-width="3" stroke-linejoin="round" />
+              <polygon points="125,46 138,15 102,32" fill="#7c3aed" stroke="#6d28d9" stroke-width="3" stroke-linejoin="round" />
+
+              <!-- Sayap Kiri & Kanan -->
+              <ellipse cx="28" cy="102" rx="14" ry="32" fill="#7c3aed" stroke="#5b21b6" stroke-width="3" transform="rotate(12 28 102)" />
+              <ellipse cx="132" cy="102" rx="14" ry="32" fill="#7c3aed" stroke="#5b21b6" stroke-width="3" transform="rotate(-12 132 102)" />
+
+              <!-- Lingkaran Mata Putih Besar -->
+              <circle cx="56" cy="65" r="24" fill="#ffffff" stroke="#e2e8f0" stroke-width="3" />
+              <circle cx="104" cy="65" r="24" fill="#ffffff" stroke="#e2e8f0" stroke-width="3" />
+
+              <!-- Iris Mata -->
+              <circle id="owlEyeLeft" cx="58" cy="65" r="13" fill="#0f172a" />
+              <circle id="owlEyeRight" cx="102" cy="65" r="13" fill="#0f172a" />
+
+              <!-- Kilauan Mata Cantik -->
+              <circle cx="53" cy="60" r="4.5" fill="#ffffff" />
+              <circle cx="97" cy="60" r="4.5" fill="#ffffff" />
+              <circle cx="61" cy="68" r="2" fill="#ffffff" />
+              <circle cx="105" cy="68" r="2" fill="#ffffff" />
+
+              <!-- Paruh Oren Segi Tiga Comel -->
+              <polygon points="80,84 70,68 90,68" fill="#f59e0b" stroke="#d97706" stroke-width="2" stroke-linejoin="round" />
+
+              <!-- Pipi Merah Jambu -->
+              <ellipse cx="38" cy="80" rx="9" ry="5" fill="#f472b6" opacity="0.6" />
+              <ellipse cx="122" cy="80" rx="9" ry="5" fill="#f472b6" opacity="0.6" />
+
+              <!-- Topi Graduasi Kecil di Atas Kepala -->
+              <polygon points="80,8 115,20 80,30 45,20" fill="#1e1b4b" />
+              <rect x="68" y="24" width="24" height="10" rx="3" fill="#312e81" />
+              <circle cx="80" cy="19" r="3" fill="#facc15" />
+              <path d="M 80 19 Q 105 24 108 36" fill="none" stroke="#facc15" stroke-width="2.5" />
+            </svg>
+          </div>
+        </div>
+      </main>
+
+      <!-- 3. Kawalan Bawah: Butang PUTAR 3D -->
+      <footer class="bottom-control-bar">
+        <button class="btn-spin-3d" id="spinBtn" aria-label="Putar Roda">
+          <span>🎯</span>
+          <span>PUTAR!</span>
+        </button>
+        <span class="keyboard-hint" aria-hidden="true">Tekan [Space] atau [Enter] untuk Putar</span>
+      </footer>
+    </div>
+
+    <!-- 4. Modal Cabaran Teka Gambar 3D -->
+    <div class="challenge-modal-overlay" id="challengeModal" role="dialog" aria-modal="true" aria-labelledby="challengeTitle">
+      <div class="challenge-card-3d">
+        <div class="challenge-card-header">
+          <span class="round-indicator" id="challengeStepBadge">Cabaran 1/12</span>
+          <span style="font-size: 1.3rem;">⭐ <strong id="cardStarText">0</strong></span>
+        </div>
+
+        <h2 class="question-prompt" id="challengeTitle">Teka kata kerja yang betul! 🔍</h2>
+
+        <!-- Petak Gambar / Emoji -->
+        <div class="image-display-box" id="imageBox">
+          <!-- Diisi melalui JavaScript -->
+          <span class="emoji-hero" id="heroEmoji">🍽️</span>
+          <img src="" alt="Gambar Kata Kerja" id="heroCustomImg" class="custom-hero-img" style="display: none;" />
+        </div>
+
+        <!-- Butang Bantuan Percuma -->
+        <div class="help-buttons-row">
+          <button class="help-btn" id="btnHelpVoice" title="Dengar sebutan kata kerja dalam Bahasa Melayu (ms-MY) - Percuma">
+            <span>🔊</span>
+            <span>Dengar (ms-MY)</span>
+          </button>
+          <button class="help-btn" id="btnHelpLetter" title="Lihat huruf pertama (Percuma)">
+            <span>💡</span>
+            <span>Huruf Pertama</span>
+          </button>
+        </div>
+
+        <!-- Paparan Petunjuk Huruf Pertama -->
+        <div class="hint-box" id="hintBox">
+          💡 Petunjuk: Bermula dengan huruf <strong id="hintLetterText" style="font-size: 1.3rem; color: #b45309;">M</strong>
+        </div>
+
+        <!-- 3 Pilihan Jawapan -->
+        <div class="answer-grid" id="answerButtonsGrid">
+          <button class="answer-btn" data-index="0">
+            <span class="btn-answer-text">Pilihan 1</span>
+            <span class="btn-num-tag">1</span>
+          </button>
+          <button class="answer-btn" data-index="1">
+            <span class="btn-answer-text">Pilihan 2</span>
+            <span class="btn-num-tag">2</span>
+          </button>
+          <button class="answer-btn" data-index="2">
+            <span class="btn-answer-text">Pilihan 3</span>
+            <span class="btn-num-tag">3</span>
+          </button>
+        </div>
+
+        <!-- Kotak Maklum Balas -->
+        <div class="feedback-box" id="feedbackBox">
+          <div id="feedbackTitle" style="font-size: 1.25rem;">Hebat! 🦉</div>
+          <div class="example-sentence-highlight" id="feedbackSentence">
+            Ayat contoh: Adik <strong>makan</strong> nasi.
+          </div>
+        </div>
+
+        <!-- Butang Teruskan -->
+        <button class="next-turn-btn" id="nextTurnBtn">
+          <span>Teruskan</span>
+          <span>➡️</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 5. Modal Lencana Pencapaian "Pakar Kata Kerja Asas 🏅" -->
+    <div class="badge-modal-overlay" id="badgeModal" role="dialog" aria-modal="true" aria-labelledby="badgeTitle">
+      <div class="badge-card">
+        <div class="badge-icon-large">🏅</div>
+        <h2 id="badgeTitle">Syabas! Hebat Sekali!</h2>
+        <p>Anda telah membuka lencana rasmi:<br><strong style="color: #ca8a04; font-size: 1.3rem;">Pakar Kata Kerja Asas 🏅</strong></p>
+        <button class="badge-dismiss-btn" id="badgeDismissBtn">Teruskan Pengembaraan! 🚀</button>
+      </div>
+    </div>
+
+    <!-- 6. Modal Skrin Penamat & Ringkasan -->
+    <div class="summary-modal-overlay" id="summaryModal" role="dialog" aria-modal="true" aria-labelledby="summaryTitle">
+      <div class="summary-card">
+        <div class="summary-header">
+          <div style="font-size: 3.5rem;">🎉🏆</div>
+          <h2 id="summaryTitle">Tahniah! Misi Selesai!</h2>
+          <p>Anda telah menguasai semua 12 Kata Kerja Asas!</p>
+        </div>
+
+        <div class="summary-metrics-grid">
+          <div class="summary-metric-box">
+            <div class="label">Jumlah Skor</div>
+            <div class="value" id="finalScoreVal" style="color: #2563eb;">120</div>
+          </div>
+          <div class="summary-metric-box">
+            <div class="label">Bintang Diperoleh</div>
+            <div class="value" id="finalStarsVal" style="color: #eab308;">⭐ 4</div>
+          </div>
+          <div class="summary-metric-box">
+            <div class="label">Tepat Percubaan 1</div>
+            <div class="value" id="finalFirstTryVal" style="color: #16a34a;">12 / 12</div>
+          </div>
+          <div class="summary-metric-box">
+            <div class="label">Kata Kerja Dikuasai</div>
+            <div class="value" style="color: #9333ea;">12 / 12</div>
+          </div>
+        </div>
+
+        <!-- Kotak Ulang Kaji (Jika ada yang salah kali pertama) -->
+        <div class="revision-box" id="revisionBox" style="display: none;">
+          <h3><span>📝</span> Kata Kerja Untuk Diulang Kaji:</h3>
+          <ul class="revision-list" id="revisionList"></ul>
+        </div>
+
+        <div class="summary-actions-row">
+          <button class="btn-play-again" id="playAgainBtn">
+            <span>🔄</span>
+            <span>Main Lagi</span>
+          </button>
+          <button class="btn-view-all" id="summaryViewAllBtn">
+            <span>📖</span>
+            <span>Ulang Kaji Semua Kata Kerja</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7. Modal Senarai Semua Kata Kerja (Kamus Mini) -->
+    <div class="dictionary-modal-overlay" id="dictModal" role="dialog" aria-modal="true" aria-labelledby="dictTitle">
+      <div class="dictionary-card">
+        <div class="dictionary-header">
+          <h2 id="dictTitle">📖 Senarai 12 Kata Kerja Asas</h2>
+          <button class="icon-btn" id="closeDictBtn" aria-label="Tutup Senarai">✕</button>
+        </div>
+        <div class="dictionary-scroll" id="dictContentList"></div>
+      </div>
+    </div>
+
+    <!-- ==========================================================================
+         KOD JAVASCRIPT LENGKAP: WEBGL / CANVAS 3D, WEB AUDIO, ATUR CARA LOGIK
+         ========================================================================== -->
+    <script>
+      /* ==========================================================================
+         1. DATA KATA KERJA TUNGGAL (SUMBER DATA UTAMA)
+         ========================================================================== */
+      const kataKerja = [
+        {
+          kataKerja: "makan",
+          gambar: "🍽️",
+          gambarUrl: "",
+          pilihanSalah: ["tidur", "berlari"],
+          ayatContoh: "Adik makan nasi."
+        },
+        {
+          kataKerja: "minum",
+          gambar: "🥤",
+          gambarUrl: "",
+          pilihanSalah: ["menulis", "melompat"],
+          ayatContoh: "Kakak minum air."
+        },
+        {
+          kataKerja: "tidur",
+          gambar: "😴",
+          gambarUrl: "",
+          pilihanSalah: ["membaca", "menari"],
+          ayatContoh: "Bayi tidur di katil."
+        },
+        {
+          kataKerja: "berlari",
+          gambar: "🏃",
+          gambarUrl: "",
+          pilihanSalah: ["duduk", "mandi"],
+          ayatContoh: "Ali berlari di padang."
+        },
+        {
+          kataKerja: "melompat",
+          gambar: "🤸",
+          gambarUrl: "",
+          pilihanSalah: ["makan", "menyanyi"],
+          ayatContoh: "Katak melompat tinggi."
+        },
+        {
+          kataKerja: "menulis",
+          gambar: "✍️",
+          gambarUrl: "",
+          pilihanSalah: ["minum", "berjalan"],
+          ayatContoh: "Murid menulis di buku."
+        },
+        {
+          kataKerja: "membaca",
+          gambar: "📖",
+          gambarUrl: "",
+          pilihanSalah: ["berlari", "tidur"],
+          ayatContoh: "Ibu membaca cerita."
+        },
+        {
+          kataKerja: "mandi",
+          gambar: "🛁",
+          gambarUrl: "",
+          pilihanSalah: ["makan", "melompat"],
+          ayatContoh: "Adik mandi pagi."
+        },
+        {
+          kataKerja: "menyanyi",
+          gambar: "🎤",
+          gambarUrl: "",
+          pilihanSalah: ["duduk", "menulis"],
+          ayatContoh: "Kami menyanyi bersama."
+        },
+        {
+          kataKerja: "menari",
+          gambar: "💃",
+          gambarUrl: "",
+          pilihanSalah: ["tidur", "minum"],
+          ayatContoh: "Dia menari dengan gembira."
+        },
+        {
+          kataKerja: "duduk",
+          gambar: "🪑",
+          gambarUrl: "",
+          pilihanSalah: ["berlari", "makan"],
+          ayatContoh: "Murid duduk di kerusi."
+        },
+        {
+          kataKerja: "berjalan",
+          gambar: "🚶",
+          gambarUrl: "",
+          pilihanSalah: ["tidur", "menulis"],
+          ayatContoh: "Ayah berjalan ke kedai."
+        }
+      ];
+
+      /* Warna-warna terang 12 segmen yang menarik bagi murid */
+      const SEGMENT_COLORS = [
+        '#ef4444', '#f97316', '#f59e0b', '#84cc16',
+        '#10b981', '#06b6d4', '#3b82f6', '#6366f1',
+        '#8b5cf6', '#d946ef', '#ec4899', '#14b8a6'
+      ];
+
+      /* Simbol mesra kanak-kanak bagi setiap segmen (tiada perkataan bocor) */
+      const SEGMENT_SYMBOLS = ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨', '⑩', '⑪', '⑫'];
+
+      /* ==========================================================================
+         2. ENJIN WEB AUDIO API SINTETIK (BEBAS FAIL AUDIO LUARAN)
+         ========================================================================== */
+      class SoundEngine {
+        constructor() {
+          this.ctx = null;
+          this.muted = false;
+        }
+
+        init() {
+          if (!this.ctx) {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (AudioCtx) {
+              this.ctx = new AudioCtx();
+            }
+          }
+          if (this.ctx && this.ctx.state === 'suspended') {
+            this.ctx.resume();
+          }
+        }
+
+        toggleMute() {
+          this.muted = !this.muted;
+          return this.muted;
+        }
+
+        // Bunyi klik roda berputar
+        playTick() {
+          if (this.muted) return;
+          this.init();
+          if (!this.ctx) return;
+
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(450, this.ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(150, this.ctx.currentTime + 0.04);
+
+          gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.04);
+
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+
+          osc.start();
+          osc.stop(this.ctx.currentTime + 0.045);
+        }
+
+        // Bunyi roda berhenti (chime)
+        playStopChime() {
+          if (this.muted) return;
+          this.init();
+          if (!this.ctx) return;
+
+          const now = this.ctx.currentTime;
+          [523.25, 659.25, 783.99].forEach((freq, i) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, now + i * 0.08);
+
+            gain.gain.setValueAtTime(0.18, now + i * 0.08);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.08 + 0.35);
+
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+
+            osc.start(now + i * 0.08);
+            osc.stop(now + i * 0.08 + 0.4);
+          });
+        }
+
+        // Bunyi tepukan & kejayaan (jawapan betul)
+        playCorrectFanfare() {
+          if (this.muted) return;
+          this.init();
+          if (!this.ctx) return;
+
+          const now = this.ctx.currentTime;
+          const chord = [523.25, 659.25, 783.99, 1046.50]; // C Major ceria
+          chord.forEach((freq, idx) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(freq, now + idx * 0.07);
+
+            gain.gain.setValueAtTime(0.2, now + idx * 0.07);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.07 + 0.5);
+
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+
+            osc.start(now + idx * 0.07);
+            osc.stop(now + idx * 0.07 + 0.55);
+          });
+        }
+
+        // Bunyi dorongan lembut jika salah (Cuba lagi)
+        playTryAgainChime() {
+          if (this.muted) return;
+          this.init();
+          if (!this.ctx) return;
+
+          const now = this.ctx.currentTime;
+          [392.00, 329.63].forEach((freq, idx) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, now + idx * 0.12);
+
+            gain.gain.setValueAtTime(0.15, now + idx * 0.12);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.12 + 0.3);
+
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+
+            osc.start(now + idx * 0.12);
+            osc.stop(now + idx * 0.12 + 0.35);
+          });
+        }
+
+        // Bunyi pembukaan lencana gemilang
+        playBadgeFanfare() {
+          if (this.muted) return;
+          this.init();
+          if (!this.ctx) return;
+
+          const notes = [392.00, 523.25, 659.25, 783.99, 1046.50];
+          const now = this.ctx.currentTime;
+          notes.forEach((freq, i) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(freq, now + i * 0.1);
+
+            gain.gain.setValueAtTime(0.25, now + i * 0.1);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.1 + 0.6);
+
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+
+            osc.start(now + i * 0.1);
+            osc.stop(now + i * 0.1 + 0.65);
+          });
+        }
+      }
+
+      /* ==========================================================================
+         3. ENJIN SEBUTAN SUARA (WEB SPEECH API BAHASA MELAYU ms-MY)
+         ========================================================================== */
+      class SpeechEngine {
+        constructor() {
+          this.voices = [];
+          this.msVoice = null;
+          this.initVoices();
+        }
+
+        initVoices() {
+          if (!('speechSynthesis' in window)) return;
+          const updateVoices = () => {
+            this.voices = window.speechSynthesis.getVoices() || [];
+            // 1. Keutamaan tertinggi: kod bahasa ms-MY (Bahasa Melayu Malaysia)
+            let chosen = this.voices.find(v => {
+              const lang = (v.lang || '').replace('_', '-').toLowerCase();
+              return lang === 'ms-my';
+            });
+            // 2. Keutamaan kedua: nama suara yang mengandungi 'Malay' atau 'Melayu'
+            if (!chosen) {
+              chosen = this.voices.find(v => {
+                const name = (v.name || '').toLowerCase();
+                const lang = (v.lang || '').toLowerCase();
+                return (name.includes('malay') || name.includes('melayu')) && !name.includes('indonesia');
+              });
+            }
+            // 3. Keutamaan ketiga: kod bahasa bermula dengan 'ms'
+            if (!chosen) {
+              chosen = this.voices.find(v => {
+                const lang = (v.lang || '').replace('_', '-').toLowerCase();
+                return lang.startsWith('ms');
+              });
+            }
+            // 4. Sandaran serantau jika sistem belum memasang pek bahasa Melayu
+            if (!chosen) {
+              chosen = this.voices.find(v => {
+                const lang = (v.lang || '').replace('_', '-').toLowerCase();
+                return lang.startsWith('id');
+              });
+            }
+            this.msVoice = chosen || null;
+          };
+
+          updateVoices();
+          if (typeof window.speechSynthesis.onvoiceschanged !== 'undefined') {
+            window.speechSynthesis.onvoiceschanged = updateVoices;
+          }
+        }
+
+        speak(text) {
+          if (!('speechSynthesis' in window)) return;
+          try {
+            window.speechSynthesis.cancel();
+            if (!this.msVoice || this.voices.length === 0) {
+              this.initVoices();
+            }
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'ms-MY'; // Bahasa Melayu Malaysia (ms-MY)
+            utterance.rate = 0.85;   // Kadar sebutan tenang dan jelas untuk Tahap 1
+            utterance.pitch = 1.0;
+
+            if (this.msVoice) {
+              utterance.voice = this.msVoice;
+            }
+            window.speechSynthesis.speak(utterance);
+          } catch (e) {
+            console.warn('Ralat sintesis suara ms-MY:', e);
+          }
+        }
+      }
+
+      /* ==========================================================================
+         4. KANVAS ZARAH & KONFETI 3D
+         ========================================================================== */
+      class ConfettiEngine {
+        constructor(canvasId) {
+          this.canvas = document.getElementById(canvasId);
+          this.ctx = this.canvas.getContext('2d');
+          this.particles = [];
+          this.animId = null;
+          this.resize();
+          window.addEventListener('resize', () => this.resize());
+        }
+
+        resize() {
+          this.canvas.width = window.innerWidth;
+          this.canvas.height = window.innerHeight;
+        }
+
+        burst(count = 70) {
+          const colors = ['#f43f5e', '#3b82f6', '#10b981', '#facc15', '#a855f7', '#fb923c'];
+          for (let i = 0; i < count; i++) {
+            this.particles.push({
+              x: window.innerWidth / 2 + (Math.random() - 0.5) * 200,
+              y: window.innerHeight * 0.45,
+              vx: (Math.random() - 0.5) * 14,
+              vy: -Math.random() * 12 - 5,
+              size: Math.random() * 9 + 6,
+              color: colors[Math.floor(Math.random() * colors.length)],
+              rotation: Math.random() * 360,
+              rotSpeed: (Math.random() - 0.5) * 12,
+              life: 1,
+              decay: Math.random() * 0.015 + 0.01
+            });
+          }
+          if (!this.animId) {
+            this.loop();
+          }
+        }
+
+        loop() {
+          this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+          for (let i = this.particles.length - 1; i >= 0; i--) {
+            const p = this.particles[i];
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vy += 0.4; // graviti
+            p.rotation += p.rotSpeed;
+            p.life -= p.decay;
+
+            if (p.life <= 0 || p.y > this.canvas.height) {
+              this.particles.splice(i, 1);
+              continue;
+            }
+
+            this.ctx.save();
+            this.ctx.translate(p.x, p.y);
+            this.ctx.rotate((p.rotation * Math.PI) / 180);
+            this.ctx.fillStyle = p.color;
+            this.ctx.globalAlpha = Math.max(0, p.life);
+            this.ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
+            this.ctx.restore();
+          }
+
+          if (this.particles.length > 0) {
+            this.animId = requestAnimationFrame(() => this.loop());
+          } else {
+            this.animId = null;
+          }
+        }
+      }
+
+      /* ==========================================================================
+         5. RODA PUSINGAN 3D (CANVAS DENGAN KEDALAMAN, BAYANG & FIZIK)
+         ========================================================================== */
+      class Wheel3D {
+        constructor(canvasId, totalSegments, onTick, onStop) {
+          this.canvas = document.getElementById(canvasId);
+          this.ctx = this.canvas.getContext('2d');
+          this.totalSegments = totalSegments;
+          this.onTick = onTick;
+          this.onStop = onStop;
+
+          this.currentAngle = 0; // dalam radian
+          this.isSpinning = false;
+          this.lastTickIndex = -1;
+
+          this.draw();
+        }
+
+        draw() {
+          const w = this.canvas.width;
+          const h = this.canvas.height;
+          const cx = w / 2;
+          const cy = h / 2;
+          const radius = w / 2 - 16;
+          const arc = (2 * Math.PI) / this.totalSegments;
+
+          this.ctx.clearRect(0, 0, w, h);
+
+          this.ctx.save();
+          this.ctx.translate(cx, cy);
+          this.ctx.rotate(this.currentAngle);
+
+          // Lukis setiap segmen berwarna
+          for (let i = 0; i < this.totalSegments; i++) {
+            const startAngle = i * arc;
+            const endAngle = startAngle + arc;
+
+            // Segmen Pie
+            this.ctx.beginPath();
+            this.ctx.moveTo(0, 0);
+            this.ctx.arc(0, 0, radius, startAngle, endAngle);
+            this.ctx.closePath();
+
+            // Kecerunan jejari untuk kesan 3D melengkung
+            const grad = this.ctx.createRadialGradient(0, 0, radius * 0.1, 0, 0, radius);
+            grad.addColorStop(0, '#ffffff');
+            grad.addColorStop(0.3, SEGMENT_COLORS[i % SEGMENT_COLORS.length]);
+            grad.addColorStop(1, this.darkenColor(SEGMENT_COLORS[i % SEGMENT_COLORS.length], 0.25));
+
+            this.ctx.fillStyle = grad;
+            this.ctx.fill();
+
+            // Garisan sempadan segmen
+            this.ctx.lineWidth = 4;
+            this.ctx.strokeStyle = '#ffffff';
+            this.ctx.stroke();
+
+            // Lukis Nombor / Simbol Segmen
+            this.ctx.save();
+            const midAngle = startAngle + arc / 2;
+            this.ctx.rotate(midAngle);
+            this.ctx.translate(radius * 0.68, 0);
+            this.ctx.rotate(Math.PI / 2);
+
+            // Bulatan putih kecil latar nombor
+            this.ctx.beginPath();
+            this.ctx.arc(0, 0, 24, 0, Math.PI * 2);
+            this.ctx.fillStyle = '#ffffff';
+            this.ctx.shadowColor = 'rgba(0,0,0,0.3)';
+            this.ctx.shadowBlur = 6;
+            this.ctx.fill();
+            this.ctx.shadowBlur = 0;
+
+            // Teks Nombor Segmen
+            this.ctx.fillStyle = '#1e293b';
+            this.ctx.font = 'bold 22px system-ui, sans-serif';
+            this.ctx.textAlign = 'center';
+            this.ctx.textBaseline = 'middle';
+            this.ctx.fillText(String(i + 1), 0, 1);
+
+            this.ctx.restore();
+          }
+
+          // Butang paku rim luar (pegs)
+          for (let i = 0; i < this.totalSegments; i++) {
+            const pegAngle = i * arc;
+            const px = Math.cos(pegAngle) * (radius - 4);
+            const py = Math.sin(pegAngle) * (radius - 4);
+
+            this.ctx.beginPath();
+            this.ctx.arc(px, py, 6, 0, Math.PI * 2);
+            this.ctx.fillStyle = '#fef08a';
+            this.ctx.strokeStyle = '#b45309';
+            this.ctx.lineWidth = 2;
+            this.ctx.fill();
+            this.ctx.stroke();
+          }
+
+          this.ctx.restore();
+        }
+
+        darkenColor(hex, factor = 0.2) {
+          // Bantuan melaraskan kecerunan gelap tepi roda
+          return hex;
+        }
+
+        /**
+         * Putar roda ke indeks segmen sasaran
+         * Penunjuk terletak di bahagian atas (pada sudut -PI/2)
+         */
+        spinTo(targetIndex) {
+          if (this.isSpinning) return;
+          this.isSpinning = true;
+
+          const arc = (2 * Math.PI) / this.totalSegments;
+          // Sasaran segmen mesti berada di atas (-PI/2)
+          // currentAngle + midAngle = -PI/2 (mod 2PI)
+          // Maka: targetAngle = -PI/2 - (targetIndex + 0.5) * arc
+          const segmentCenter = (targetIndex + 0.5) * arc;
+          const targetOffset = -Math.PI / 2 - segmentCenter;
+
+          // Tambah 5 hingga 8 putaran penuh supaya ada debaran dan nyahpecutan lancar
+          const extraRotations = (5 + Math.floor(Math.random() * 3)) * 2 * Math.PI;
+
+          const startAngle = this.currentAngle;
+          // Kira sudut akhir yang bergerak mengikut arah jam
+          const normalizedStart = startAngle % (2 * Math.PI);
+          let delta = (targetOffset - normalizedStart) % (2 * Math.PI);
+          if (delta < 0) delta += 2 * Math.PI;
+          const totalDistance = extraRotations + delta;
+          const finalAngle = startAngle + totalDistance;
+
+          const duration = 2800; // ms
+          const startTime = performance.now();
+
+          const animate = (time) => {
+            const elapsed = time - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+
+            // Easing kuartik keluar (nyahpecutan lembut & realistik)
+            const ease = 1 - Math.pow(1 - progress, 3.6);
+            this.currentAngle = startAngle + totalDistance * ease;
+
+            // Kira segmen yang sedang melintasi penunjuk atas untuk bunyi detikan
+            const activeAngle = (-this.currentAngle - Math.PI / 2) % (2 * Math.PI);
+            const positiveAngle = activeAngle < 0 ? activeAngle + 2 * Math.PI : activeAngle;
+            const currentSegment = Math.floor(positiveAngle / arc) % this.totalSegments;
+
+            if (currentSegment !== this.lastTickIndex) {
+              this.lastTickIndex = currentSegment;
+              if (this.onTick) this.onTick();
+            }
+
+            this.draw();
+
+            if (progress < 1) {
+              requestAnimationFrame(animate);
+            } else {
+              this.currentAngle = finalAngle;
+              this.draw();
+              this.isSpinning = false;
+              if (this.onStop) this.onStop(targetIndex);
+            }
+          };
+
+          requestAnimationFrame(animate);
+        }
+      }
+
+      /* ==========================================================================
+         6. KAWALAN PERMAINAN UTAMA (LOGIK STATUS, MATA, BINTANG, LENCANA)
+         ========================================================================== */
+      class GameManager {
+        constructor() {
+          this.sound = new SoundEngine();
+          this.speech = new SpeechEngine();
+          this.confetti = new ConfettiEngine('confettiCanvas');
+
+          // Status Permainan
+          this.score = 0;
+          this.stars = 0;
+          this.streak = 0;
+          this.completedIndices = [];
+          this.currentChallengeIndex = null;
+          this.attemptCount = 0;
+          this.currentOptions = [];
+          this.firstTryRecord = []; // Rekod { index, correctOnFirstTry }
+          this.badgeUnlocked = false;
+
+          // Elemen DOM
+          this.scoreText = document.getElementById('scoreText');
+          this.starText = document.getElementById('starText');
+          this.progressText = document.getElementById('progressText');
+          this.badgePill = document.getElementById('badgePill');
+          this.spinBtn = document.getElementById('spinBtn');
+          this.audioToggleBtn = document.getElementById('audioToggleBtn');
+          this.viewAllBtn = document.getElementById('viewAllBtn');
+          this.downloadHtmlBtn = document.getElementById('downloadHtmlBtn');
+
+          // Modal & Dialog
+          this.challengeModal = document.getElementById('challengeModal');
+          this.challengeStepBadge = document.getElementById('challengeStepBadge');
+          this.cardStarText = document.getElementById('cardStarText');
+          this.heroEmoji = document.getElementById('heroEmoji');
+          this.heroCustomImg = document.getElementById('heroCustomImg');
+          this.btnHelpVoice = document.getElementById('btnHelpVoice');
+          this.btnHelpLetter = document.getElementById('btnHelpLetter');
+          this.hintBox = document.getElementById('hintBox');
+          this.hintLetterText = document.getElementById('hintLetterText');
+          this.answerButtonsGrid = document.getElementById('answerButtonsGrid');
+          this.feedbackBox = document.getElementById('feedbackBox');
+          this.feedbackTitle = document.getElementById('feedbackTitle');
+          this.feedbackSentence = document.getElementById('feedbackSentence');
+          this.nextTurnBtn = document.getElementById('nextTurnBtn');
+
+          this.badgeModal = document.getElementById('badgeModal');
+          this.badgeDismissBtn = document.getElementById('badgeDismissBtn');
+
+          this.summaryModal = document.getElementById('summaryModal');
+          this.finalScoreVal = document.getElementById('finalScoreVal');
+          this.finalStarsVal = document.getElementById('finalStarsVal');
+          this.finalFirstTryVal = document.getElementById('finalFirstTryVal');
+          this.revisionBox = document.getElementById('revisionBox');
+          this.revisionList = document.getElementById('revisionList');
+          this.playAgainBtn = document.getElementById('playAgainBtn');
+          this.summaryViewAllBtn = document.getElementById('summaryViewAllBtn');
+
+          this.dictModal = document.getElementById('dictModal');
+          this.closeDictBtn = document.getElementById('closeDictBtn');
+          this.dictContentList = document.getElementById('dictContentList');
+
+          // Maskot & Penunjuk
+          this.mascotBubble = document.getElementById('mascotBubble');
+          this.owlMascot = document.getElementById('owlMascot');
+          this.wheelPointer = document.getElementById('wheelPointer');
+
+          // Inisialisasi Roda
+          this.wheel = new Wheel3D(
+            'wheelCanvas',
+            kataKerja.length,
+            () => this.onWheelTick(),
+            (index) => this.onWheelStop(index)
+          );
+
+          this.bindEvents();
+          this.updateHUD();
+          this.populateDictionary();
+        }
+
+        bindEvents() {
+          // Butang Putar
+          this.spinBtn.addEventListener('click', () => this.handleSpin());
+
+          // Togol Bunyi
+          this.audioToggleBtn.addEventListener('click', () => {
+            const isMuted = this.sound.toggleMute();
+            this.audioToggleBtn.innerHTML = isMuted 
+              ? '🔇 <span style="font-size: 0.72rem; font-weight: 800; margin-left: 2px;">Bisu</span>' 
+              : '🔊 <span style="font-size: 0.72rem; font-weight: 800; margin-left: 2px;">ms-MY</span>';
+            this.audioToggleBtn.title = isMuted ? 'Buka Bunyi (ms-MY)' : 'Bisu Bunyi';
+          });
+
+          // Pilihan Jawapan
+          const answerButtons = this.answerButtonsGrid.querySelectorAll('.answer-btn');
+          answerButtons.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+              const idx = parseInt(btn.getAttribute('data-index'), 10);
+              this.handleAnswerSelection(idx, btn);
+            });
+          });
+
+          // Butang Bantuan
+          this.btnHelpVoice.addEventListener('click', () => {
+            if (this.currentChallengeIndex !== null) {
+              const currentItem = kataKerja[this.currentChallengeIndex];
+              this.speech.speak(currentItem.kataKerja);
+            }
+          });
+
+          this.btnHelpLetter.addEventListener('click', () => {
+            if (this.currentChallengeIndex !== null) {
+              const currentItem = kataKerja[this.currentChallengeIndex];
+              const firstLetter = currentItem.kataKerja.charAt(0).toUpperCase();
+              this.hintLetterText.textContent = firstLetter;
+              this.hintBox.style.display = 'block';
+            }
+          });
+
+          // Butang Teruskan Cabaran
+          this.nextTurnBtn.addEventListener('click', () => this.handleNextTurn());
+
+          // Butang Tutup Lencana
+          this.badgeDismissBtn.addEventListener('click', () => {
+            this.badgeModal.classList.remove('active');
+          });
+
+          // Butang Main Semula
+          this.playAgainBtn.addEventListener('click', () => {
+            this.summaryModal.classList.remove('active');
+            this.resetGame();
+          });
+
+          // Butang Kamus / Senarai Kata Kerja
+          this.viewAllBtn.addEventListener('click', () => this.openDictionary());
+          this.summaryViewAllBtn.addEventListener('click', () => {
+            this.summaryModal.classList.remove('active');
+            this.openDictionary();
+          });
+          this.closeDictBtn.addEventListener('click', () => {
+            this.dictModal.classList.remove('active');
+          });
+
+          // Butang Muat Turun HTML Luar Talian
+          this.downloadHtmlBtn.addEventListener('click', () => this.downloadSelfHtml());
+
+          // Navigasi Papan Kekunci
+          window.addEventListener('keydown', (e) => this.handleKeyDown(e));
+        }
+
+        handleKeyDown(e) {
+          if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+          // Space atau Enter untuk putar / teruskan
+          if (e.code === 'Space' || e.code === 'Enter') {
+            if (this.nextTurnBtn.style.display === 'flex') {
+              e.preventDefault();
+              this.handleNextTurn();
+              return;
+            }
+            if (!this.wheel.isSpinning && !this.challengeModal.classList.contains('active') && !this.spinBtn.disabled) {
+              e.preventDefault();
+              this.handleSpin();
+              return;
+            }
+          }
+
+          // Kunci 1, 2, 3 untuk jawapan
+          if (this.challengeModal.classList.contains('active') && this.nextTurnBtn.style.display !== 'flex') {
+            if (e.key === '1' || e.key === '2' || e.key === '3') {
+              const idx = parseInt(e.key, 10) - 1;
+              const btns = this.answerButtonsGrid.querySelectorAll('.answer-btn');
+              if (btns[idx] && !btns[idx].disabled && !btns[idx].classList.contains('eliminated')) {
+                btns[idx].click();
+              }
+            }
+            // Kunci D untuk Dengar, H untuk Huruf pertama
+            if (e.key.toLowerCase() === 'd') {
+              this.btnHelpVoice.click();
+            }
+            if (e.key.toLowerCase() === 'h') {
+              this.btnHelpLetter.click();
+            }
+          }
+        }
+
+        onWheelTick() {
+          this.sound.playTick();
+          this.wheelPointer.classList.add('tick');
+          setTimeout(() => this.wheelPointer.classList.remove('tick'), 60);
+        }
+
+        handleSpin() {
+          if (this.wheel.isSpinning) return;
+
+          // Cari baki indeks yang belum selesai
+          const remainingIndices = [];
+          for (let i = 0; i < kataKerja.length; i++) {
+            if (!this.completedIndices.includes(i)) {
+              remainingIndices.push(i);
+            }
+          }
+
+          if (remainingIndices.length === 0) {
+            this.showSummaryModal();
+            return;
+          }
+
+          // Pilih satu kata kerja secara rawak daripada baki
+          const chosenIndex = remainingIndices[Math.floor(Math.random() * remainingIndices.length)];
+
+          this.spinBtn.disabled = true;
+          this.setMascotReaction('jumping', 'Roda sedang berputar! 🌀');
+
+          // Mulakan putaran roda ke indeks tersebut
+          this.wheel.spinTo(chosenIndex);
+        }
+
+        onWheelStop(chosenIndex) {
+          this.sound.playStopChime();
+          this.currentChallengeIndex = chosenIndex;
+          this.attemptCount = 0;
+
+          this.setMascotReaction('cheering', 'Teka gambar ini! 🔍');
+
+          // Buka kad cabaran dengan sedikit kelewatan lembut
+          setTimeout(() => {
+            this.openChallengeCard(chosenIndex);
+          }, 450);
+        }
+
+        openChallengeCard(index) {
+          const item = kataKerja[index];
+          this.challengeStepBadge.textContent = `Cabaran ${this.completedIndices.length + 1} / 12`;
+          this.cardStarText.textContent = String(this.stars);
+
+          // Sediakan Gambar / Emoji
+          if (item.gambarUrl && item.gambarUrl.trim() !== '') {
+            this.heroEmoji.style.display = 'none';
+            this.heroCustomImg.style.display = 'block';
+            this.heroCustomImg.src = item.gambarUrl;
+          } else {
+            this.heroCustomImg.style.display = 'none';
+            this.heroEmoji.style.display = 'block';
+            this.heroEmoji.textContent = item.gambar;
+          }
+
+          // Sediakan pilihan jawapan (1 betul, 2 salah, diacak)
+          const allOptions = [item.kataKerja, item.pilihanSalah[0], item.pilihanSalah[1]];
+          // Acak susunan
+          for (let i = allOptions.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [allOptions[i], allOptions[j]] = [allOptions[j], allOptions[i]];
+          }
+          this.currentOptions = allOptions;
+
+          // Kemas kini butang jawapan
+          const buttons = this.answerButtonsGrid.querySelectorAll('.answer-btn');
+          buttons.forEach((btn, i) => {
+            btn.querySelector('.btn-answer-text').textContent = allOptions[i];
+            btn.className = 'answer-btn';
+            btn.disabled = false;
+          });
+
+          // Reset bantuan & maklum balas
+          this.hintBox.style.display = 'none';
+          this.feedbackBox.className = 'feedback-box';
+          this.feedbackBox.style.display = 'none';
+          this.nextTurnBtn.style.display = 'none';
+
+          // Buka modal
+          this.challengeModal.classList.add('active');
+        }
+
+        handleAnswerSelection(optionIndex, btnElement) {
+          if (this.currentChallengeIndex === null) return;
+          const currentItem = kataKerja[this.currentChallengeIndex];
+          const selectedWord = this.currentOptions[optionIndex];
+          this.attemptCount++;
+
+          const isCorrect = selectedWord.toLowerCase() === currentItem.kataKerja.toLowerCase();
+
+          if (isCorrect) {
+            // JAWAPAN BETUL
+            this.handleCorrectAnswer(btnElement, currentItem);
+          } else {
+            // JAWAPAN SALAH
+            this.handleWrongAnswer(btnElement, currentItem);
+          }
+        }
+
+        handleCorrectAnswer(btnElement, currentItem) {
+          btnElement.classList.add('correct');
+
+          // Kunci semua butang
+          const allButtons = this.answerButtonsGrid.querySelectorAll('.answer-btn');
+          allButtons.forEach(btn => btn.disabled = true);
+
+          // Bunyi tepukan & konfeti
+          this.sound.playCorrectFanfare();
+          this.confetti.burst(80);
+
+          // Sebut perkataan
+          this.speech.speak(currentItem.kataKerja);
+
+          // Kira mata
+          const earned = this.attemptCount === 1 ? 10 : 5;
+          this.score += earned;
+
+          // Semak bintang jika betul pada percubaan pertama
+          if (this.attemptCount === 1) {
+            this.streak++;
+            this.firstTryRecord.push({ index: this.currentChallengeIndex, correctFirst: true });
+            if (this.streak % 3 === 0) {
+              this.stars++;
+              this.setMascotReaction('cheering', 'Hebat! Dapat 1 Bintang ⭐!');
+            } else {
+              this.setMascotReaction('cheering', 'Hebat! Jawapan tepat! 🎉');
+            }
+          } else {
+            this.streak = 0;
+            this.firstTryRecord.push({ index: this.currentChallengeIndex, correctFirst: false });
+            this.setMascotReaction('cheering', 'Bagus! Berjaya menjawab! 👏');
+          }
+
+          // Rekod selesai
+          this.completedIndices.push(this.currentChallengeIndex);
+          this.updateHUD();
+
+          // Semak Lencana "Pakar Kata Kerja Asas 🏅"
+          this.checkBadgeAward();
+
+          // Paparkan maklum balas ayat contoh dengan kata kerja ditebalkan & butang dengar ms-MY
+          this.feedbackBox.className = 'feedback-box correct';
+          this.feedbackTitle.innerHTML = 'Hebat! 🦉 Jawapan anda betul!';
+          this.feedbackSentence.innerHTML = `Ayat contoh: ${this.highlightVerbInSentence(currentItem.ayatContoh, currentItem.kataKerja)} <button class="dict-speak-btn" id="btnSpeakSentence" style="display:inline-flex; width:28px; height:28px; margin-left:8px; vertical-align:middle;" title="Dengar sebutan ayat (ms-MY)">🔊</button>`;
+          const speakSentenceBtn = this.feedbackSentence.querySelector('#btnSpeakSentence');
+          if (speakSentenceBtn) {
+            speakSentenceBtn.addEventListener('click', () => {
+              this.speech.speak(currentItem.ayatContoh);
+            });
+          }
+          this.feedbackBox.style.display = 'block';
+
+          // Tunjuk butang Seterusnya
+          this.nextTurnBtn.style.display = 'flex';
+          this.nextTurnBtn.focus();
+        }
+
+        handleWrongAnswer(btnElement, currentItem) {
+          btnElement.classList.add('wrong');
+          this.sound.playTryAgainChime();
+
+          if (this.attemptCount === 1) {
+            // Percubaan pertama salah: beri peluang ke-2 & buang 1 pilihan salah
+            this.setMascotReaction('jumping', 'Cuba lagi! Anda boleh! 💪');
+
+            this.feedbackBox.className = 'feedback-box try-again';
+            this.feedbackTitle.innerHTML = 'Cuba lagi! 💪 Satu pilihan salah telah disingkirkan.';
+            this.feedbackSentence.innerHTML = 'Pilih jawapan yang paling tepat.';
+            this.feedbackBox.style.display = 'block';
+
+            // Singkirkan 1 pilihan salah yang lain
+            const buttons = Array.from(this.answerButtonsGrid.querySelectorAll('.answer-btn'));
+            const wrongOtherButtons = buttons.filter((b, idx) => {
+              return this.currentOptions[idx] !== currentItem.kataKerja && b !== btnElement;
+            });
+            if (wrongOtherButtons.length > 0) {
+              const toEliminate = wrongOtherButtons[Math.floor(Math.random() * wrongOtherButtons.length)];
+              toEliminate.classList.add('eliminated');
+              toEliminate.disabled = true;
+            }
+            btnElement.disabled = true;
+          } else {
+            // Percubaan kedua salah: beri jawapan membina dan benarkan teruskan
+            this.streak = 0;
+            this.firstTryRecord.push({ index: this.currentChallengeIndex, correctFirst: false });
+            this.completedIndices.push(this.currentChallengeIndex);
+            this.updateHUD();
+
+            // Serlahkan jawapan betul
+            const buttons = this.answerButtonsGrid.querySelectorAll('.answer-btn');
+            buttons.forEach((b, idx) => {
+              b.disabled = true;
+              if (this.currentOptions[idx] === currentItem.kataKerja) {
+                b.classList.add('correct');
+              }
+            });
+
+            this.feedbackBox.className = 'feedback-box try-again';
+            this.feedbackTitle.innerHTML = `Jawapan yang betul ialah: <strong>${currentItem.kataKerja}</strong>`;
+            this.feedbackSentence.innerHTML = `Ayat contoh: ${this.highlightVerbInSentence(currentItem.ayatContoh, currentItem.kataKerja)} <button class="dict-speak-btn" id="btnSpeakWrongSentence" style="display:inline-flex; width:28px; height:28px; margin-left:8px; vertical-align:middle;" title="Dengar sebutan ayat (ms-MY)">🔊</button>`;
+            const speakWrongSentenceBtn = this.feedbackSentence.querySelector('#btnSpeakWrongSentence');
+            if (speakWrongSentenceBtn) {
+              speakWrongSentenceBtn.addEventListener('click', () => {
+                this.speech.speak(currentItem.ayatContoh);
+              });
+            }
+            this.feedbackBox.style.display = 'block';
+
+            this.nextTurnBtn.style.display = 'flex';
+            this.nextTurnBtn.focus();
+          }
+        }
+
+        handleNextTurn() {
+          this.challengeModal.classList.remove('active');
+          this.spinBtn.disabled = false;
+          this.currentChallengeIndex = null;
+
+          if (this.completedIndices.length >= kataKerja.length) {
+            setTimeout(() => this.showSummaryModal(), 400);
+          } else {
+            this.setMascotReaction('cheering', 'Sedia untuk putaran seterusnya! 🎯');
+          }
+        }
+
+        highlightVerbInSentence(sentence, verb) {
+          const regex = new RegExp(`(${verb})`, 'gi');
+          return sentence.replace(regex, '<strong>$1</strong>');
+        }
+
+        checkBadgeAward() {
+          if (this.badgeUnlocked) return;
+          // Semak jika sekurang-kurangnya 8 daripada 10 soalan pertama betul pada kali pertama
+          if (this.firstTryRecord.length >= 8) {
+            const first10 = this.firstTryRecord.slice(0, 10);
+            const correctFirstCount = first10.filter(r => r.correctFirst).length;
+            if (correctFirstCount >= 8) {
+              this.badgeUnlocked = true;
+              this.badgePill.style.display = 'flex';
+              setTimeout(() => {
+                this.sound.playBadgeFanfare();
+                this.confetti.burst(120);
+                this.badgeModal.classList.add('active');
+              }, 600);
+            }
+          }
+        }
+
+        updateHUD() {
+          this.scoreText.textContent = `${this.score} Mata`;
+          this.starText.textContent = String(this.stars);
+          this.progressText.textContent = `${this.completedIndices.length} / 12`;
+        }
+
+        setMascotReaction(animClass, message) {
+          this.mascotBubble.textContent = message;
+          this.owlMascot.classList.remove('jumping', 'cheering');
+          if (animClass) {
+            void this.owlMascot.offsetWidth; // paku reflow
+            this.owlMascot.classList.add(animClass);
+          }
+        }
+
+        showSummaryModal() {
+          this.sound.playBadgeFanfare();
+          this.confetti.burst(140);
+
+          const firstTryCount = this.firstTryRecord.filter(r => r.correctFirst).length;
+          this.finalScoreVal.textContent = String(this.score);
+          this.finalStarsVal.textContent = `⭐ ${this.stars}`;
+          this.finalFirstTryVal.textContent = `${firstTryCount} / 12`;
+
+          // Senaraikan kata kerja yang silap pada kali pertama untuk ulang kaji
+          const wrongList = this.firstTryRecord.filter(r => !r.correctFirst);
+          this.revisionList.innerHTML = '';
+          if (wrongList.length > 0) {
+            this.revisionBox.style.display = 'block';
+            wrongList.forEach(item => {
+              const data = kataKerja[item.index];
+              const li = document.createElement('li');
+              li.className = 'revision-item';
+              li.innerHTML = `
+                <span><strong>${data.gambar} ${data.kataKerja}</strong> – ${data.ayatContoh}</span>
+                <button class="dict-speak-btn" title="Dengar sebutan" aria-label="Dengar ${data.kataKerja}">🔊</button>
+              `;
+              li.querySelector('button').addEventListener('click', () => {
+                this.speech.speak(data.kataKerja);
+              });
+              this.revisionList.appendChild(li);
+            });
+          } else {
+            this.revisionBox.style.display = 'none';
+          }
+
+          this.summaryModal.classList.add('active');
+        }
+
+        resetGame() {
+          this.score = 0;
+          this.stars = 0;
+          this.streak = 0;
+          this.completedIndices = [];
+          this.currentChallengeIndex = null;
+          this.attemptCount = 0;
+          this.firstTryRecord = [];
+          this.badgeUnlocked = false;
+          this.badgePill.style.display = 'none';
+          this.spinBtn.disabled = false;
+          this.updateHUD();
+          this.setMascotReaction('cheering', 'Jom main lagi! Putar roda! 🎡');
+        }
+
+        populateDictionary() {
+          this.dictContentList.innerHTML = '';
+          kataKerja.forEach((item, idx) => {
+            const card = document.createElement('div');
+            card.className = 'dict-item-card';
+            card.innerHTML = `
+              <div class="dict-emoji">${item.gambar}</div>
+              <div class="dict-details">
+                <div class="dict-verb">${idx + 1}. ${item.kataKerja}</div>
+                <div class="dict-sentence">${item.ayatContoh}</div>
+              </div>
+              <button class="dict-speak-btn" title="Sebutan Bahasa Melayu (ms-MY)" aria-label="Sebutan ${item.kataKerja} (ms-MY)">🔊</button>
+            `;
+            card.querySelector('button').addEventListener('click', () => {
+              this.speech.speak(item.kataKerja);
+            });
+            this.dictContentList.appendChild(card);
+          });
+        }
+
+        openDictionary() {
+          this.dictModal.classList.add('active');
+        }
+
+        downloadSelfHtml() {
+          // Membolehkan guru memuat turun fail index.html lengkap secara luar talian dengan 1 klik
+          const htmlContent = document.documentElement.outerHTML;
+          const blob = new Blob(['<!doctype html>\n' + htmlContent], { type: 'text/html;charset=utf-8' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'Roda_Kata_Kerja_3D_Tahap1.html';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }
+      }
+
+      // Mulakan permainan apabila DOM bersedia
+      document.addEventListener('DOMContentLoaded', () => {
+        window.game = new GameManager();
+      });
+    </script>
+  </body>
+</html>
